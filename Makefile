@@ -82,6 +82,8 @@ clean all:
 	$(MAKE) -C services $(MAKECMDGOALS) $(MAKEARGS)
 	$(MAKE) -C webui $(MAKECMDGOALS) $(MAKEARGS)
 	$(MAKE) -C samples $(MAKECMDGOALS) $(MAKEARGS)
+	$(MAKE) -C nanoleaf $(MAKECMDGOALS) $(MAKEARGS)
+
 
 clean_bundles:
 	rm platform/OSP/bundles/*.bndl
