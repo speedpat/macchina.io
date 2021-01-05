@@ -1,0 +1,21 @@
+<bundlespec>
+    <manifest>
+        <name>NanoLeaf</name>
+        <symbolicName>net.speedpat.macchina.nanoleaf</symbolicName>
+        <version>1.0.0</version>
+        <vendor>SpeedPat</vendor>
+        <copyright>(c) 2020, Patrick Heeb</copyright>
+        <activator>
+            <class>NanoLeaf::BundleActivator</class>
+            <library>net.speedpat.macchina.nanoleaf</library>
+        </activator>
+        <lazyStart>false</lazyStart>
+        <runLevel>400</runLevel>
+    </manifest>
+    <code>
+        bin/${osName}/${osArch}/*.so,
+        bin/${osName}/${osArch}/*.dylib,
+    </code>
+    <files>
+    </files>
+</bundlespec>
