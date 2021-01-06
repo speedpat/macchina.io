@@ -10,7 +10,7 @@ PRODUCT ?= sdk
 DESTDIR ?= /usr/local/macchina
 INSTALLDIR ?= $(DESTDIR)
 
-RUNTIME_LIBS = PocoFoundation PocoXML PocoJSON PocoUtil PocoZip PocoOSP PocoRemotingNG PocoGeo
+RUNTIME_LIBS = PocoOSPWeb PocoFoundation PocoOSPJS PocoJWT PocoOSPWebEvent PocoJSON PocoJSCore PocoWebTunnel PocoRemotingNG PocoXML PocoData PocoUtil PocoNetSSL PocoGeo PocoNet PocoJSNet PocoZip PocoSerial PocoJSData PocoRedis PocoCrypto PocoOSP PocoRemotingNGTCP PocoDataSQLite PocoJSBridge
 
 MACCHINA_BASE = $(shell pwd)
 POCO_BASE = $(MACCHINA_BASE)/platform
@@ -141,8 +141,10 @@ install_runtime:
 	for lib in $(RUNTIME_LIBS) ; do \
 		find $(POCO_BASE)/lib/$(OSNAME)/$(OSARCH) -name "lib$$lib$(VLIBEXT)" -type f -exec cp -f {} $(INSTALLDIR)/lib \; ; \
 	done
+	find $(POCO_BASE)/lib/$(OSNAME)/$(OSARCH) -name "libv8*$(LIBEXT)" -type f -exec cp -f {} $(INSTALLDIR)/lib \;
 	cp -f $(POCO_BASE)/OSP/bundles/*.bndl $(INSTALLDIR)/lib/bundles
 	cp -f $(MACCHINA_BASE)/*/bundles/*.bndl $(INSTALLDIR)/lib/bundles
+	find $(MACCHINA_BASE)/lib/$(OSNAME)/$(OSARCH) -name lib*$(VLIBEXT) -type f -exec cp -f {} $(INSTALLDIR)/lib \;
 	cp $(MACCHINA_BASE)/server/macchina.properties.install $(INSTALLDIR)/etc/macchina.properties
 	cp $(MACCHINA_BASE)/server/rootcert.pem $(INSTALLDIR)/etc
 	cp $(MACCHINA_BASE)/server/macchina.pem $(INSTALLDIR)/etc
