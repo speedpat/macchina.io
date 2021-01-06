@@ -7,6 +7,6 @@
 .PHONY: clean all
 
 clean all:
-	$(MAKE) -C nanoleaf $(MAKECMDGOALS)
 	$(MAKE) -C poco-dnssd $(MAKECMDGOALS)
-	$(MAKE) -C poco-dnssd/Bonjour $(MAKECMDGOALS)
+	$(MAKE) -C poco-dnssd/Default $(MAKECMDGOALS)
+	$(MAKE) -C nanoleaf $(MAKECMDGOALS)
