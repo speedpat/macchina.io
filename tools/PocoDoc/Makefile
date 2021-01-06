@@ -10,6 +10,6 @@ objects = DocWriter PocoDoc
 
 target         = PocoDoc
 target_version = 1
-target_libs    = PocoCppParser PocoFoundation PocoXML PocoUtil
+target_libs    = PocoCppParser PocoFoundation PocoXML PocoUtil PocoJSON
 
 include $(POCO_BASE)/build/rules/exec
