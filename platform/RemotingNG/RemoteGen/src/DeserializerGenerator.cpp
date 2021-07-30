@@ -18,6 +18,7 @@
 #include "Poco/CppParser/Parameter.h"
 #include "Poco/CppParser/Utility.h"
 #include "Poco/CppParser/Variable.h"
+#include "Poco/CppParser/Enum.h"
 #include "Poco/NumberFormatter.h"
 #include "Poco/NullStream.h"
 #include "Poco/Exception.h"
@@ -371,6 +372,7 @@ void DeserializerGenerator::prepareDeserializeAttributesCodeGenImpl(const Poco::
 	// the first line contains a static string array containing names
 	if (!attrs.empty())
 	{
+		gen.writeMethodImplementation("using namespace std::string_literals;\n");
 		std::string staticVarNames(Poco::format("static const std::string REMOTING__NAMES%s[] = {", suffix));
 		// after the names will be all used namespaces
 		int firstNSPos = static_cast<int>(attrs.size());
@@ -464,6 +466,7 @@ void DeserializerGenerator::deserializeAttributesCodeGenImpl(const Poco::CppPars
 	// the first line contains a static string array containing names
 	if (!attrs.empty())
 	{
+		gen.writeMethodImplementation("using namespace std::string_literals;\n");
 		std::string staticVarNames(Poco::format("static const std::string REMOTING__NAMES%s[] = {", suffix));
 		int curNamesPos = 0;
 		int retUsage(0);
@@ -732,13 +735,17 @@ void DeserializerGenerator::generateTypeDeserializerLines(const Poco::CppParser:
 	std::string code("ret = TypeDeserializer<");
 	Poco::CppParser::Symbol* pSym = pDataType->lookup(declType);
 	bool enumMode = false;
+	std::string enumBaseType;
 	if (pSym && pSym->kind() == Poco::CppParser::Symbol::SYM_ENUM)
 	{
 		enumMode = true;
+		enumBaseType = static_cast<Poco::CppParser::Enum*>(pSym)->baseType();
+		if (enumBaseType.empty()) enumBaseType = "int";
 	}
 	if (enumMode)
 	{
-		code = "int ";
+		code = enumBaseType;
+		code += " ";
 		code.append(varName);
 		code.append(";");
 		lines.push_back(code);
@@ -755,7 +762,7 @@ void DeserializerGenerator::generateTypeDeserializerLines(const Poco::CppParser:
 	else ++retUsageCount; // we use the ret variable
 
 	if (enumMode)
-		code.append("int");
+		code.append(enumBaseType);
 	else
 		code.append(declType);
 	if (pVar->isPointer())

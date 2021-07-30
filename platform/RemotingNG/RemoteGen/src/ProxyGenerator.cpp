@@ -17,11 +17,13 @@
 #include "Poco/CodeGeneration/GeneratorEngine.h"
 #include "Poco/CppParser/Function.h"
 #include "Poco/CppParser/Utility.h"
+#include "Poco/CppParser/Enum.h"
 #include "Poco/Exception.h"
 #include "Poco/Path.h"
 #include "Poco/NumberFormatter.h"
 #include "Poco/StringTokenizer.h"
 #include "Poco/String.h"
+#include "Poco/Format.h"
 #include "Poco/Timespan.h"
 #include "Poco/RemotingNG/SerializerBase.h"
 
@@ -376,13 +378,18 @@ void ProxyGenerator::staticMembersInitializer(const Poco::CppParser::Function* p
 {
 	std::string code("const std::string ");
 	code.append(pStruct->name());
-	code.append("::DEFAULT_NS(\"");
+	code.append("::DEFAULT_NS");
 	CodeGenerator::Properties structProps;
 	GeneratorEngine::parseProperties(pStruct, structProps);
 	std::string defNS;
 	GeneratorEngine::getStringProperty(structProps, Utility::NAMESPACE, defNS);
-	code.append(defNS);
-	code.append("\");");
+	if (!defNS.empty())
+	{
+		code.append("(\"");
+		code.append(defNS);
+		code.append("\")");
+	}
+	code.append(";");
 	gen.writeImplementation(code);
 }
 
@@ -732,9 +739,14 @@ void ProxyGenerator::writeTypeSerializer(const Poco::CppParser::Function* pFunc,
 			std::string type(Poco::CodeGeneration::Utility::resolveType(pFunc->nameSpace(), itOP->second.pParam->declType()));
 			Poco::CppParser::Symbol* pSym = pFunc->nameSpace()->lookup(type);
 
+			bool enumMode = false;
+			std::string enumBaseType;
 			if (pSym && pSym->kind() == Poco::CppParser::Symbol::SYM_ENUM)
 			{
-				type = "int";
+				enumMode = true;
+				enumBaseType = static_cast<Poco::CppParser::Enum*>(pSym)->baseType();
+				if (enumBaseType.empty()) enumBaseType = "int";
+				type = enumBaseType;
 			}
 			serLine.append(type);
 			if (itOP->second.pParam->isPointer())
@@ -743,7 +755,10 @@ void ProxyGenerator::writeTypeSerializer(const Poco::CppParser::Function* pFunc,
 
 			serLine.append(Poco::NumberFormatter::format(itOP->second.namePos));
 			serLine.append("], ");
-			serLine.append(itOP->second.varName);
+			if (enumMode)
+				serLine.append(Poco::format("static_cast<%s>(%s)", enumBaseType, itOP->second.varName));
+			else
+				serLine.append(itOP->second.varName);
 			serLine.append(", remoting__ser);");
 			gen.writeMethodImplementation(serLine);
 
@@ -994,14 +1009,17 @@ void ProxyGenerator::writeTypeDeserializers(const Poco::CppParser::Function* pFu
 				poco_assert (isOutParam);
 				Poco::CppParser::Symbol* pSym = pFunc->nameSpace()->lookup(retType);
 				bool enumMode = false;
+				std::string enumBaseType;
 				if (pSym && pSym->kind() == Poco::CppParser::Symbol::SYM_ENUM)
 				{
 					enumMode = true;
+					enumBaseType = static_cast<Poco::CppParser::Enum*>(pSym)->baseType();
+					if (enumBaseType.empty()) enumBaseType = "int";
 				}
 				std::string cntStr(Poco::NumberFormatter::format(itOP->second.namePos));
 				std::string codeLine("Poco::RemotingNG::TypeDeserializer<");
 				if (enumMode)
-					codeLine.append("int");
+					codeLine.append(enumBaseType);
 				else
 					codeLine.append(retType);
 				codeLine.append(" >::deserialize(REMOTING__NAMES[");
@@ -1014,7 +1032,7 @@ void ProxyGenerator::writeTypeDeserializers(const Poco::CppParser::Function* pFu
 				codeLine.append("remoting__deser, " );
 				if (enumMode)
 				{
-					gen.writeMethodImplementation(indentation + "int remoting__" + itOP->second.varName + "Tmp;");
+					gen.writeMethodImplementation(Poco::format("%s%s remoting__%sTmp;", indentation, enumBaseType, itOP->second.varName));
 					codeLine.append("remoting__" + itOP->second.varName + "Tmp");
 				}
 				else
@@ -1110,15 +1128,20 @@ void ProxyGenerator::writeDeserializeReturnParam(const Poco::CppParser::Function
 		}
 		Poco::CppParser::Symbol* pSym = pFunc->nameSpace()->lookup(retParamType);
 		bool enumMode = false;
+		std::string enumBaseType;
 		if (pSym && pSym->kind() == Poco::CppParser::Symbol::SYM_ENUM)
 		{
 			enumMode = true;
+			enumBaseType = static_cast<Poco::CppParser::Enum*>(pSym)->baseType();
+			if (enumBaseType.empty()) enumBaseType = "int";
 		}
 		else
+		{
 			retParamType = retParam.declType();
+		}
 		std::string line("Poco::RemotingNG::TypeDeserializer<");
 		if (enumMode)
-			line.append("int");
+			line.append(enumBaseType);
 		else
 			line.append(retParamType);
 		if (retParam.isPointer())

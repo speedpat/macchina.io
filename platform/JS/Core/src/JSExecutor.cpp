@@ -843,42 +843,6 @@ private:
 
 
 //
-// StopScriptTask
-//
-
-
-class StopScriptTask: public Poco::Util::TimerTask
-{
-public:
-	typedef Poco::AutoPtr<StopScriptTask> Ptr;
-
-	StopScriptTask(TimedJSExecutor* pExecutor):
-		_pExecutor(pExecutor, true)
-	{
-	}
-
-	void run()
-	{
-		_pExecutor->_timer.cancel(false);
-		_stopped.set();
-	}
-
-	void wait()
-	{
-		_pExecutor->terminate();
-		while (!_stopped.tryWait(200))
-		{
-			_pExecutor->terminate();
-		}
-	}
-
-private:
-	TimedJSExecutor::Ptr _pExecutor;
-	Poco::Event _stopped;
-};
-
-
-//
 // CallFunctionTask
 //
 
@@ -892,7 +856,6 @@ public:
 		_pExecutor(pExecutor, true),
 		_function(pIsolate, function)
 	{
-		_pExecutor->_callFunctionTasks.insert(this);
 	}
 
 	CallFunctionTask(v8::Isolate* pIsolate, TimedJSExecutor* pExecutor, v8::Handle<v8::Function> function, v8::Handle<v8::Array> arguments):
@@ -900,23 +863,11 @@ public:
 		_function(pIsolate, function),
 		_arguments(pIsolate, arguments)
 	{
-		_pExecutor->_callFunctionTasks.insert(this);
 	}
 
 	~CallFunctionTask()
 	{
-		try
-		{
-			if (_pExecutor)
-			{
-				_pExecutor->_callFunctionTasks.erase(this);
-				_pExecutor = 0;
-			}
-		}
-		catch (...)
-		{
-			poco_unexpected();
-		}
+		_pExecutor.reset();
 		_function.Reset();
 		_arguments.Reset();
 	}
@@ -924,10 +875,7 @@ public:
 	void run()
 	{
 		TimedJSExecutor::Ptr pExecutor = _pExecutor;
-		if (pExecutor)
-		{
-			pExecutor->call(_function, _arguments);
-		}
+		pExecutor->call(_function, _arguments);
 	}
 
 	void onExecutorStopped()
@@ -1021,16 +969,7 @@ void TimedJSExecutor::stop()
 		_stopped = true;
 	}
 
-	StopScriptTask::Ptr pStopTask = new StopScriptTask(this);
-	_timer.schedule(pStopTask, Poco::Clock(0));
-	pStopTask->wait();
-	pStopTask = 0;
-
-	for (auto pTask: _callFunctionTasks)
-	{
-		pTask->onExecutorStopped();
-	}
-	_callFunctionTasks.clear();
+	_timer.cancel(this);
 
 	stopped(this);
 

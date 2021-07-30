@@ -1,6 +1,6 @@
 ![macchina.io][logo]
 
-*macchina.io Edge Device SDK is a powerful application software platform for IoT devices.*
+*macchina.io EDGE is a powerful application software platform for IoT devices.*
 
 With macchina.io you can rapidly build and deploy device applications that communicate with devices, sensors, actuators, cloud services, and humans.
 
@@ -21,7 +21,7 @@ For more information, including [documentation](https://macchina.io/docs), pleas
 Build Status
 ------------
 
-- Travis: [![Travis Build Status](https://travis-ci.org/macchina-io/macchina.io.png?branch=develop)](https://travis-ci.org/macchina-io/macchina.io/)
+[![macchina.io-ci](https://github.com/macchina-io/macchina.io/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/macchina-io/macchina.io/actions/workflows/ci.yml)
 
 
 Prerequisites
@@ -67,9 +67,12 @@ the [documentation](http://macchina.io/docs/index.html), specifically
 License
 -------
 
-macchina.io IoT Edge Device SDK is dual-licensed under a [commercial license](https://macchina.io/sdk_pricing.html) and the [GPLv3](LICENSE.html). The commercial license gives you the full rights to create and distribute software and devices on your own terms without any GPL obligations. With the commercial license you also have access to professional support and maintenance, as well as additional features.
-See [this table](https://macchina.io/sdk_pricing.html#table) for a comparison between
-GPLv3-licensed and commercial-licensed macchina.io IoT Edge Device SDK features.
+macchina.io EDGE is dual-licensed under a [commercial license](https://macchina.io/sdk_licensing.html)
+and the [GPLv3](LICENSE.html). The commercial license gives you the full rights to create and distribute software and devices on
+your own terms without any GPL obligations. With the commercial license you also have access to professional support and maintenance,
+as well as additional features.
+See [this table](https://macchina.io/sdk_licensing.html#table) for a comparison between
+GPLv3-licensed and commercial-licensed macchina.io EDGE features.
 
 Contributions
 -------------

@@ -16,6 +16,7 @@
 #include "Poco/CppParser/Struct.h"
 #include "Poco/CppParser/Parameter.h"
 #include "Poco/CppParser/Utility.h"
+#include "Poco/CppParser/Enum.h"
 #include "Poco/NumberFormatter.h"
 #include "Poco/NullStream.h"
 #include "Poco/Exception.h"
@@ -408,6 +409,8 @@ void SerializerGenerator::serializeAttributesCodeGenImpl(const Poco::CppParser::
 	// the first line contains a static string array containing names
 	if (!attrs.empty())
 	{
+		gen.writeMethodImplementation("using namespace std::string_literals;\n");
+
 		std::string staticVarNames(Poco::format("static const std::string REMOTING__NAMES%s[] = {", suffix));
 		int curNamesPos = 0;
 		OrderedVars::const_iterator itAttr = attrs.begin();
@@ -472,6 +475,7 @@ void SerializerGenerator::prepareSerializeAttributesCodeGenImpl(const Poco::CppP
 	// the first line contains a static string array containing names
 	if (!attrs.empty())
 	{
+		gen.writeMethodImplementation("using namespace std::string_literals;\n");
 		std::string staticVarNames(Poco::format("static const std::string REMOTING__NAMES%s[] = {", suffix));
 		// after the names will be all used namespaces
 		int firstNSPos = static_cast<int>(attrs.size());
@@ -710,9 +714,14 @@ std::string SerializerGenerator::generateTypeSerializerLine(const Poco::CppParse
 	std::string retType (Poco::CodeGeneration::Utility::resolveType(pContext, ret.declType()));
 	Poco::CppParser::Symbol* pSym = pContext->lookup(it->second.first->declType());
 
+	bool enumMode = false;
+	std::string enumBaseType;
 	if (pSym && pSym->kind() == Poco::CppParser::Symbol::SYM_ENUM)
 	{
-		retType = "int";
+		enumBaseType = static_cast<Poco::CppParser::Enum*>(pSym)->baseType();
+		if (enumBaseType.empty()) enumBaseType = "int";
+		retType = enumBaseType;
+		enumMode = true;
 	}
 
 	code.append(retType);
@@ -721,16 +730,25 @@ std::string SerializerGenerator::generateTypeSerializerLine(const Poco::CppParse
 	code.append(Poco::format(" >::serialize(REMOTING__NAMES%s[", suffix));
 	code.append(Poco::NumberFormatter::format(namePos));
 	code.append("], ");
+	if (enumMode)
+	{
+		code.append("static_cast<");
+		code.append(enumBaseType);
+		code.append(">(");
+	}
 	code.append("value");
 	if (it->second.second != 0)
 	{
 		code.append("."+it->second.second->name());
-		code.append("(), ser);");
+		code.append("()");
+		if (enumMode) code.append(")");
+		code.append(", ser);");
 	}
 	else
 	{
 		code.append(".");
 		code.append(it->second.first->name());
+		if (enumMode) code.append(")");
 		code.append(", ser);");
 	}
 	return code;
